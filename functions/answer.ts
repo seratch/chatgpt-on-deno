@@ -40,16 +40,18 @@ export default SlackFunction(def, async ({ inputs, env }) => {
     },
     body,
   });
-  if (!response.ok) {
-    const error = `Failed to call the OpenAI API: ${response}`;
-    return { error };
-  }
   let answer =
     "Sorry! OpenAI didn't provide any answers to this question. Can you try a differen way to ask the same?";
-  const responseBody: OpenAIResponse = await response.json();
-  console.log(responseBody);
-  if (responseBody.choices && responseBody.choices.length > 0) {
-    answer = responseBody.choices[0].text;
+  if (!response.ok) {
+    console.log(response);
+    answer =
+      `Sorry! Something is wrong with OpenAI's API access... Can you try it again later? (error: ${response.statusText})`;
+  } else {
+    const responseBody: OpenAIResponse = await response.json();
+    console.log(responseBody);
+    if (responseBody.choices && responseBody.choices.length > 0) {
+      answer = responseBody.choices[0].text;
+    }
   }
   return { outputs: { answer } };
 });
