@@ -77,6 +77,9 @@ following command:
 slack env add OPENAI_API_KEY sk-...
 ```
 
+Also, if you already have the API access to GPT-4 model, you can switch to
+`gpt-4` by having `OPENAI_MODEL` env variable.
+
 ## Create a link trigger for configuring your app
 
 [Triggers](https://api.slack.com/future/triggers) are what cause workflows to

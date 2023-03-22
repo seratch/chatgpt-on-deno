@@ -73,7 +73,9 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     // "gpt-4" works too
     "model": env.OPENAI_MODEL ?? "gpt-3.5-turbo",
     "messages": messages,
+    // TODO: adjust the max token size for a given model
     "max_tokens": 2000,
+    // TODO: other parameters for optimization
   });
   console.log(body);
   const response = await fetch(API_ENDPOINT, {

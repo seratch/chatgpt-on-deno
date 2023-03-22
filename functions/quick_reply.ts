@@ -42,6 +42,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     "model": env.OPENAI_MODEL ?? "gpt-3.5-turbo",
     "messages": messages,
     "max_tokens": 2000,
+    // TODO: other parameters for optimization
   });
   console.log(body);
   const response = await fetch(API_ENDPOINT, {
