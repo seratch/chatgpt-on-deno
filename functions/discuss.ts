@@ -78,6 +78,16 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     return { error };
   }
   for (const message of replies.messages) {
+    if (
+      message.metadata &&
+      message.metadata.event_type === "chat-gpt-convo" &&
+      message.metadata.event_payload &&
+      message.metadata.event_payload.question
+    ) {
+      // Append the first question from the user
+      const content = message.metadata.event_payload.question;
+      messages.push({ role: "user", content });
+    }
     messages.push({
       role: thisAppBotUserId ? "assistant" : "user",
       content: message.text,
