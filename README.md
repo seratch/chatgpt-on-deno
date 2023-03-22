@@ -9,7 +9,7 @@ in a Slack channel.
 
 - [Supported Workflows](#supported-workflows)
 - [Setup](#setup)
-  - [Create Your DeepL API Account](#create-your-deepl-api-account)
+  - [Create Your OpenAI API Account](#create-your-openai-api-account)
   - [Install the Slack CLI](#install-the-slack-cli)
   - [Clone the Template](#clone-the-template)
   - [Save Env Values](#save-env-values)
@@ -78,7 +78,8 @@ slack env add OPENAI_API_KEY sk-...
 ```
 
 Also, if you already have the API access to GPT-4 model, you can switch to
-`gpt-4` by having `OPENAI_MODEL` env variable.
+`gpt-4` by having `OPENAI_MODEL=gpt-4` in the `.env` file for dev app and
+running `slack env add OPENAI_MODEL gpt-4` for deployed app.
 
 ## Create a link trigger for configuring your app
 
@@ -152,7 +153,7 @@ bot's message in its thread:
 
 Once you're done with development, you can deploy the production version of your
 app to Slack hosting using `slack deploy`. Also, please don't forget setting the
-DeepL API token for the deployed app.
+OpenAI API key for the deployed app.
 
 ```zsh
 $ slack deploy
