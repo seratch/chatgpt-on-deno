@@ -1,20 +1,23 @@
 import { Manifest } from "deno-slack-sdk/mod.ts";
-import Ask from "./workflows/ask.ts";
-import Answer from "./workflows/answer.ts";
+import Configure from "./workflows/configure.ts";
+import QuickReply from "./workflows/quick_reply.ts";
+import Discuss from "./workflows/discuss.ts";
 import QuestionEvent from "./events/question.ts";
 
 export default Manifest({
-  name: "Ask OpenAI",
-  description: "OpenAI-based Q&A App",
+  name: "ChatGPT on Deno",
+  description: "ChatGPT on Slack's next-gen platform",
   icon: "assets/openai.png",
-  workflows: [Ask, Answer],
+  workflows: [Configure, QuickReply, Discuss],
   events: [QuestionEvent],
   outgoingDomains: ["api.openai.com"],
   botScopes: [
     "commands",
+    "app_mentions:read",
     "chat:write",
     "chat:write.public",
-    "metadata.message:read",
+    "channels:join",
+    "channels:history",
     "triggers:read",
     "triggers:write",
   ],
