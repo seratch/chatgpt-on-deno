@@ -1,29 +1,10 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-
-export const API_KEY_ERROR =
-  "OpenAI's API key is required for running this function! To fix this, follow these two steps:\n\n 1) Grab the API key string in https://platform.openai.com/account/api-keys \n 2) Place .env file for local development, or run `slack env add OPENAI_API_KEY {YOUR KEY HERE}` for deployed app.";
-
-const OPEN_AI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-
-interface OpenAIResponse {
-  id: string;
-  object: "chat.completion";
-  created: number;
-  model: string;
-  choices: {
-    message: {
-      role: "assistant";
-      content: string;
-    };
-    index: number;
-    finish_reason: string;
-  }[];
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
+import {
+  API_ENDPOINT,
+  API_KEY_ERROR,
+  buildSystemMessage,
+  OpenAIResponse,
+} from "./openai.ts";
 
 export const def = DefineFunction({
   callback_id: "answer",
@@ -50,11 +31,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     return { error: API_KEY_ERROR };
   }
   const messages = [
-    {
-      "role": "system",
-      "content":
-        "You are a bot in a slack chat room. You might receive messages from multiple people. Slack user IDs match the regex `<@U.*?>`. Your Slack user ID is <@{bot_user_id}>.",
-    },
+    buildSystemMessage(),
     {
       "role": "user",
       "content": inputs.question.replaceAll("<@[^>]+>\s*", ""),
@@ -67,7 +44,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     "max_tokens": 2000,
   });
   console.log(body);
-  const response = await fetch(OPEN_AI_ENDPOINT, {
+  const response = await fetch(API_ENDPOINT, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
