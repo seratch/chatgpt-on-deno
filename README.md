@@ -102,7 +102,7 @@ To create a link trigger for the workflow that enables end-users to configure
 the translator workflow in this template, run the following command:
 
 ```zsh
-$ slack trigger create --trigger-def triggers/configure.ts
+$ slack trigger create --trigger-def triggers/configure_link.ts
 ```
 
 After selecting a Workspace, the output provided will include the link trigger
