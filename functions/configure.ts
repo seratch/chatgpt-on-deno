@@ -28,8 +28,9 @@ export default SlackFunction(def, async ({ inputs, client, env }) => {
   // ---------------------------
   // Open a modal for configuring the channel list
   // ---------------------------
-  const triggerToUpdate = await findAppMentionedTriggerToUpdate(
+  const triggerToUpdate = await findTriggerToUpdate(
     client,
+    "app_mentioned",
     inputs.quickReplyWorkflowId,
     debugMode,
   );
@@ -71,12 +72,12 @@ export default SlackFunction(def, async ({ inputs, client, env }) => {
       let modalMessage =
         "*You're all set!*\n\nThis ChatGPT is now available for the channels :white_check_mark:";
       try {
-        const appMentionedTriggerToUpdate =
-          await findAppMentionedTriggerToUpdate(
-            client,
-            inputs.quickReplyWorkflowId,
-            debugMode,
-          );
+        const appMentionedTriggerToUpdate = await findTriggerToUpdate(
+          client,
+          "app_mentioned",
+          inputs.quickReplyWorkflowId,
+          debugMode,
+        );
         // If the trigger already exists, we update it.
         // Otherwise, we create a new one.
         await createOrUpdateAppMentionedTrigger(
@@ -85,8 +86,9 @@ export default SlackFunction(def, async ({ inputs, client, env }) => {
           channelIds,
           appMentionedTriggerToUpdate,
         );
-        const messageTriggerToUpdate = await findMessageTriggerToUpdate(
+        const messageTriggerToUpdate = await findTriggerToUpdate(
           client,
+          "message_posted",
           inputs.discussWorkflowId,
           debugMode,
         );
@@ -193,6 +195,10 @@ function buildModalUpdateResponse(modalMessage: string) {
   };
 }
 
+// ------------------------------
+// Common utiltities
+// ------------------------------
+
 export function isDebugMode(env: Record<string, string>) {
   if (env.DEBUG_MODE) {
     return env.DEBUG_MODE === "true";
@@ -200,8 +206,9 @@ export function isDebugMode(env: Record<string, string>) {
   return true;
 }
 
-export async function findAppMentionedTriggerToUpdate(
+export async function findTriggerToUpdate(
   client: SlackAPIClient,
+  eventType: string,
   workflowCallbackId: string,
   debugMode: boolean,
 ) {
@@ -214,7 +221,7 @@ export async function findAppMentionedTriggerToUpdate(
     for (const trigger of allTriggers.triggers) {
       if (
         trigger.workflow.callback_id === workflowCallbackId &&
-        trigger.event_type === "slack#/events/app_mentioned"
+        trigger.event_type === `slack#/events/${eventType}`
       ) {
         triggerToUpdate = trigger;
       }
@@ -225,6 +232,10 @@ export async function findAppMentionedTriggerToUpdate(
   }
   return triggerToUpdate;
 }
+
+// ------------------------------
+// app_mentioned events
+// ------------------------------
 
 const appMentionedTriggerInputs = {
   channel_id: { value: "{{data.channel_id}}" },
@@ -280,6 +291,9 @@ export async function createOrUpdateAppMentionedTrigger(
     console.log(`The trigger updated: ${JSON.stringify(update)}`);
   }
 }
+// ------------------------------
+// joining channels
+// ------------------------------
 
 export async function joinAllChannels(
   client: SlackAPIClient,
@@ -311,34 +325,8 @@ async function joinChannel(
 }
 
 // ------------------------------
-// message events
+// message_posted events
 // ------------------------------
-
-export async function findMessageTriggerToUpdate(
-  client: SlackAPIClient,
-  workflowCallbackId: string,
-  debugMode: boolean,
-) {
-  // Check the existing triggers for this workflow
-  const allTriggers = await client.workflows.triggers.list({ is_owner: true });
-  let triggerToUpdate = undefined;
-
-  // find the trigger to update
-  if (allTriggers.triggers) {
-    for (const trigger of allTriggers.triggers) {
-      if (
-        trigger.workflow.callback_id === workflowCallbackId &&
-        trigger.event_type === "slack#/events/message_posted"
-      ) {
-        triggerToUpdate = trigger;
-      }
-    }
-  }
-  if (debugMode) {
-    console.log(`The trigger to update: ${JSON.stringify(triggerToUpdate)}`);
-  }
-  return triggerToUpdate;
-}
 
 const messageTriggerInputs = {
   channel_id: { value: "{{data.channel_id}}" },

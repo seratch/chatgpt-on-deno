@@ -1,9 +1,11 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import {
-  API_ENDPOINT,
   API_KEY_ERROR,
   buildSystemMessage,
-  OpenAIResponse,
+  calculateNumTokens,
+  callOpenAI,
+  Message,
+  OpenAIModel,
 } from "./openai.ts";
 
 export const def = DefineFunction({
@@ -30,42 +32,29 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     console.log(API_KEY_ERROR);
     return { error: API_KEY_ERROR };
   }
-  const messages = [
+  const messages: Message[] = [
     buildSystemMessage(),
     {
       "role": "user",
       "content": inputs.question.replaceAll("<@[^>]+>\s*", ""),
     },
   ];
+
+  const model = env.OPENAI_MODEL
+    ? env.OPENAI_MODEL as OpenAIModel
+    : OpenAIModel.GPT_3_5_TURBO;
+  const upperLimit = model === OpenAIModel.GPT_4 ? 6000 : 3000;
+  while (calculateNumTokens(messages) > upperLimit) {
+    messages.shift();
+  }
   const body = JSON.stringify({
-    // "gpt-4" works too
-    "model": env.OPENAI_MODEL ?? "gpt-3.5-turbo",
+    "model": model,
     "messages": messages,
-    "max_tokens": 2000,
-    // TODO: other parameters for optimization
+    "max_tokens": calculateNumTokens(messages),
   });
   console.log(body);
-  const response = await fetch(API_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    body,
-  });
-  let answer =
-    ":warning: ChatGPT didn't respond to your request. Please try it again later.";
-  if (!response.ok) {
-    console.log(response);
-    answer =
-      `:warning: Sorry, something is wrong with your ChaGPT request! Can you try it again later? (error: ${response.statusText})`;
-  } else {
-    const responseBody: OpenAIResponse = await response.json();
-    console.log(responseBody);
-    if (responseBody.choices && responseBody.choices.length > 0) {
-      answer = responseBody.choices[0].message.content;
-    }
-  }
+
+  const answer = await callOpenAI(apiKey, 12, body);
   const replyResponse = await client.chat.postMessage({
     channel: inputs.channel_id,
     text: `<@${inputs.user_id}> ${answer}`,
