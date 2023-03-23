@@ -43,14 +43,15 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
   const model = env.OPENAI_MODEL
     ? env.OPENAI_MODEL as OpenAIModel
     : OpenAIModel.GPT_3_5_TURBO;
-  const upperLimit = model === OpenAIModel.GPT_4 ? 6000 : 3000;
-  while (calculateNumTokens(messages) > upperLimit) {
+  const maxTokensForThisReply = 1024;
+  const modelLimit = model === OpenAIModel.GPT_4 ? 6000 : 4000;
+  while (calculateNumTokens(messages) > modelLimit - maxTokensForThisReply) {
     messages.shift();
   }
   const body = JSON.stringify({
     "model": model,
     "messages": messages,
-    "max_tokens": calculateNumTokens(messages),
+    "max_tokens": maxTokensForThisReply,
   });
   console.log(body);
 
