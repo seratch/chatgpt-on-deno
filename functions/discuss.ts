@@ -49,10 +49,12 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     include_all_metadata: true,
     limit: 1000,
   });
+
   if (replies.error) {
     const error = `Failed to fetch replies in a thread due to ${replies.error}`;
     return { error };
   }
+  let isDiscussion = false;
   for (const message of replies.messages) {
     if (
       message.metadata &&
@@ -63,11 +65,16 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
       // Append the first question from the user
       const content = message.metadata.event_payload.question;
       messages.push({ role: "user", content });
+      isDiscussion = true;
     }
     messages.push({
       role: thisAppBotUserId ? "assistant" : "user",
       content: message.text,
     });
+  }
+
+  if (!isDiscussion) {
+    return { outputs: {} };
   }
 
   const model = env.OPENAI_MODEL
