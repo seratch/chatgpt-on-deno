@@ -62,6 +62,10 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
       message.metadata.event_payload &&
       message.metadata.event_payload.question
     ) {
+      if (message.user !== thisAppBotUserId) {
+        // the top message by a different app such as another dev app
+        return { outputs: {} };
+      }
       // Append the first question from the user
       const content = message.metadata.event_payload.question;
       messages.push({ role: "user", content });
