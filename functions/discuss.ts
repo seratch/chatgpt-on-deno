@@ -72,7 +72,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
       isDiscussion = true;
     }
     messages.push({
-      role: thisAppBotUserId ? "assistant" : "user",
+      role: message.user === thisAppBotUserId ? "assistant" : "user",
       content: message.text,
     });
   }
