@@ -33,7 +33,6 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     return { error: API_KEY_ERROR };
   }
   const messages: Message[] = [
-    buildSystemMessage(),
     {
       "role": "user",
       "content": inputs.question.replaceAll("<@[^>]+>\s*", ""),
@@ -45,9 +44,13 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     : OpenAIModel.GPT_3_5_TURBO;
   const maxTokensForThisReply = 1024;
   const modelLimit = model === OpenAIModel.GPT_4 ? 6000 : 4000;
+  const systemMessage = buildSystemMessage();
+  messages.push(systemMessage); // append this for now but will move it to the beginning later
   while (calculateNumTokens(messages) > modelLimit - maxTokensForThisReply) {
     messages.shift();
   }
+  messages.pop(); // remove the appended system one
+  messages.unshift(systemMessage); // insert the system one as the 1st element
   const body = JSON.stringify({
     "model": model,
     "messages": messages,

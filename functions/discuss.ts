@@ -4,6 +4,7 @@ import {
   buildSystemMessage,
   calculateNumTokens,
   callOpenAI,
+  Message,
   OpenAIModel,
 } from "./openai.ts";
 
@@ -41,7 +42,6 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     console.log(API_KEY_ERROR);
     return { error: API_KEY_ERROR };
   }
-  const messages = [buildSystemMessage()];
 
   const replies = await client.conversations.replies({
     channel: inputs.channel_id,
@@ -54,6 +54,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     const error = `Failed to fetch replies in a thread due to ${replies.error}`;
     return { error };
   }
+  const messages: Message[] = [];
   let isDiscussion = false;
   for (const message of replies.messages) {
     if (
@@ -86,9 +87,13 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
     : OpenAIModel.GPT_3_5_TURBO;
   const maxTokensForThisReply = 1024;
   const modelLimit = model === OpenAIModel.GPT_4 ? 6000 : 4000;
+  const systemMessage = buildSystemMessage();
+  messages.push(systemMessage); // append this for now but will move it to the beginning later
   while (calculateNumTokens(messages) > modelLimit - maxTokensForThisReply) {
     messages.shift();
   }
+  messages.pop(); // remove the appended system one
+  messages.unshift(systemMessage); // insert the system one as the 1st element
 
   const body = JSON.stringify({
     "model": model,
