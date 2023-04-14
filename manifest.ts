@@ -5,7 +5,7 @@ import Discuss from "./workflows/discuss.ts";
 
 export default Manifest({
   name: "ChatGPT on Deno",
-  description: "ChatGPT on Slack's next-gen platform",
+  description: "ChatGPT on Slack's modular platform",
   icon: "assets/openai.png",
   workflows: [Configure, QuickReply, Discuss],
   outgoingDomains: ["api.openai.com"],

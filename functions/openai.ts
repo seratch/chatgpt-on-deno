@@ -1,3 +1,5 @@
+// TODO: 1.6 does not work in this app
+// error: Uncaught (in promise) SyntaxError: Unexpected token '/', "// This is"... is not valid JSON
 import { encode } from "https://deno.land/x/gpt@1.5/mod.ts";
 
 export const API_KEY_ERROR =
