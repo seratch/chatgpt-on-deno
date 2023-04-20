@@ -17,6 +17,7 @@ export const def = DefineFunction({
       channel_id: { type: Schema.slack.types.channel_id },
       user_id: { type: Schema.slack.types.user_id },
       question: { type: Schema.types.string },
+      message_ts: { type: Schema.types.string },
     },
     required: ["channel_id", "user_id", "question"],
   },
@@ -62,6 +63,7 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
   const replyResponse = await client.chat.postMessage({
     channel: inputs.channel_id,
     text: `<@${inputs.user_id}> ${answer}`,
+    thread_ts: inputs.message_ts,
     metadata: {
       "event_type": "chat-gpt-convo",
       "event_payload": { "question": inputs.question },

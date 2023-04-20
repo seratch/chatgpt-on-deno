@@ -240,6 +240,7 @@ export async function findTriggerToUpdate(
 const appMentionedTriggerInputs = {
   channel_id: { value: "{{data.channel_id}}" },
   user_id: { value: "{{data.user_id}}" },
+  message_ts: { value: "{{data.message_ts}}" },
   text: { value: "{{data.text}}" },
 };
 
