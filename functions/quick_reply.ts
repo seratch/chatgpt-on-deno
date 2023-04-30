@@ -1,4 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
+import { SlackAPIClient } from "slack-web-api-client/mod.ts";
 import {
   API_KEY_ERROR,
   buildSystemMessage,
@@ -27,7 +28,8 @@ export const def = DefineFunction({
   },
 });
 
-export default SlackFunction(def, async ({ inputs, env, client }) => {
+export default SlackFunction(def, async ({ inputs, env, token }) => {
+  const client = new SlackAPIClient(token);
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) {
     console.log(API_KEY_ERROR);

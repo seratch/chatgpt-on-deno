@@ -1,4 +1,6 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
+import { SlackAPIClient } from "slack-web-api-client/mod.ts";
+
 import {
   API_KEY_ERROR,
   buildSystemMessage,
@@ -27,7 +29,8 @@ export const def = DefineFunction({
   },
 });
 
-export default SlackFunction(def, async ({ inputs, env, client }) => {
+export default SlackFunction(def, async ({ inputs, env, token }) => {
+  const client = new SlackAPIClient(token);
   if (!inputs.thread_ts) {
     return { outputs: {} };
   }
@@ -56,25 +59,24 @@ export default SlackFunction(def, async ({ inputs, env, client }) => {
   }
   const messages: Message[] = [];
   let isDiscussion = false;
-  for (const message of replies.messages) {
+  for (const message of replies.messages || []) {
     if (
       message.metadata &&
       message.metadata.event_type === "chat-gpt-convo" &&
-      message.metadata.event_payload &&
-      message.metadata.event_payload.question
+      message.metadata.event_payload
     ) {
+      const question = message.metadata.event_payload.question;
       if (message.user !== thisAppBotUserId) {
         // the top message by a different app such as another dev app
         return { outputs: {} };
       }
       // Append the first question from the user
-      const content = message.metadata.event_payload.question;
-      messages.push({ role: "user", content });
+      messages.push({ role: "user", content: question });
       isDiscussion = true;
     }
     messages.push({
       role: message.user === thisAppBotUserId ? "assistant" : "user",
-      content: message.text,
+      content: message.text || "",
     });
   }
 

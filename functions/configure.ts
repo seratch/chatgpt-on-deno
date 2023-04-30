@@ -1,5 +1,9 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import { SlackAPIClient } from "deno-slack-api/types.ts";
+import {
+  EventTrigger,
+  ModalView,
+  SlackAPIClient,
+} from "slack-web-api-client/mod.ts";
 
 export const def = DefineFunction({
   callback_id: "configure",
@@ -23,7 +27,8 @@ export const def = DefineFunction({
   },
 });
 
-export default SlackFunction(def, async ({ inputs, client, env }) => {
+export default SlackFunction(def, async ({ inputs, token, env }) => {
+  const client = new SlackAPIClient(token);
   const debugMode = isDebugMode(env);
   // ---------------------------
   // Open a modal for configuring the channel list
@@ -65,7 +70,8 @@ export default SlackFunction(def, async ({ inputs, client, env }) => {
   // ---------------------------
   .addViewSubmissionHandler(
     ["configure-workflow"],
-    async ({ view, inputs, client, env }) => {
+    async ({ view, inputs, token, env }) => {
+      const client = new SlackAPIClient(token);
       const debugMode = isDebugMode(env);
       const channelIds = view.state.values.block.channels.selected_channels;
 
@@ -136,7 +142,7 @@ export default SlackFunction(def, async ({ inputs, client, env }) => {
 // Internal functions
 // ---------------------------
 
-function buildModalView(channelIds: string[]) {
+function buildModalView(channelIds: string[]): ModalView {
   return {
     "type": "modal",
     "callback_id": "configure-workflow",
@@ -211,7 +217,7 @@ export async function findTriggerToUpdate(
   eventType: string,
   workflowCallbackId: string,
   debugMode: boolean,
-) {
+): Promise<EventTrigger | undefined> {
   // Check the existing triggers for this workflow
   const allTriggers = await client.workflows.triggers.list({ is_owner: true });
   let triggerToUpdate = undefined;
@@ -220,6 +226,7 @@ export async function findTriggerToUpdate(
   if (allTriggers.triggers) {
     for (const trigger of allTriggers.triggers) {
       if (
+        trigger.type === "event" &&
         trigger.workflow.callback_id === workflowCallbackId &&
         trigger.event_type === `slack#/events/${eventType}`
       ) {
@@ -248,7 +255,7 @@ export async function createOrUpdateAppMentionedTrigger(
   client: SlackAPIClient,
   workflowCallbackId: string,
   channelIds: string[],
-  triggerToUpdate?: Record<string, string>,
+  triggerToUpdate?: EventTrigger,
 ) {
   // deno-lint-ignore no-explicit-any
   const channel_ids = channelIds as any;
@@ -341,7 +348,7 @@ export async function createOrUpdateMessageTrigger(
   client: SlackAPIClient,
   workflowCallbackId: string,
   channelIds: string[],
-  triggerToUpdate?: Record<string, string>,
+  triggerToUpdate?: EventTrigger,
 ) {
   // deno-lint-ignore no-explicit-any
   const channel_ids = channelIds as any;
