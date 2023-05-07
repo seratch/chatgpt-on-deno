@@ -39,11 +39,11 @@ export interface OpenAIResponse {
   };
 }
 
-export function buildSystemMessage(): Message {
+export function buildSystemMessage(botUserId?: string): Message {
   return {
     "role": "system",
     "content":
-      "You are a bot in a slack chat room. You might receive messages from multiple people. Slack user IDs match the regex `<@U.*?>`. Your Slack user ID is <@{bot_user_id}>.",
+      `You are a bot in a slack chat room. You might receive messages from multiple people. Slack user IDs match the regex \`<@U.*?>\`. Your Slack user ID is <@${botUserId}>.`,
   };
 }
 
