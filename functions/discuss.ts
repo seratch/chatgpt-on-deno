@@ -89,7 +89,7 @@ export default SlackFunction(def, async ({ inputs, env, token }) => {
     : OpenAIModel.GPT_3_5_TURBO;
   const maxTokensForThisReply = 1024;
   const modelLimit = model === OpenAIModel.GPT_4 ? 6000 : 4000;
-  const systemMessage = buildSystemMessage();
+  const systemMessage = buildSystemMessage(thisAppBotUserId);
   messages.push(systemMessage); // append this for now but will move it to the beginning later
   while (calculateNumTokens(messages) > modelLimit - maxTokensForThisReply) {
     messages.shift();
